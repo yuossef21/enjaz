@@ -1,0 +1,348 @@
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { receiptVouchersService } from '@/services/receipt-vouchers.service';
+import { Layout } from '@/components/layout/Layout';
+import { Plus, Check, Send, Trash2 } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
+
+export const ReceiptVouchersPage = () => {
+  const [showForm, setShowForm] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('');
+  const queryClient = useQueryClient();
+  const { hasPermission } = useAuthStore();
+
+  const { data: vouchers, isLoading } = useQuery({
+    queryKey: ['receipt-vouchers', statusFilter],
+    queryFn: () => receiptVouchersService.getReceiptVouchers({ status: statusFilter }),
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: receiptVouchersService.approveReceiptVoucher,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['receipt-vouchers'] });
+    },
+  });
+
+  const postMutation = useMutation({
+    mutationFn: receiptVouchersService.postReceiptVoucher,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['receipt-vouchers'] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: receiptVouchersService.deleteReceiptVoucher,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['receipt-vouchers'] });
+    },
+  });
+
+  const handleApprove = (id: string) => {
+    if (confirm('هل أنت متأكد من الموافقة على هذا السند؟')) {
+      approveMutation.mutate(id);
+    }
+  };
+
+  const handlePost = (id: string) => {
+    if (confirm('هل أنت متأكد من ترحيل هذا السند؟')) {
+      postMutation.mutate(id);
+    }
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm('هل أنت متأكد من حذف هذا السند؟')) {
+      deleteMutation.mutate(id);
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const styles = {
+      draft: 'bg-gray-100 text-gray-800',
+      approved: 'bg-green-100 text-green-800',
+      posted: 'bg-blue-100 text-blue-800',
+    };
+    const labels = {
+      draft: 'مسودة',
+      approved: 'موافق عليه',
+      posted: 'مرحل',
+    };
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status as keyof typeof styles]}`}>
+        {labels[status as keyof typeof labels]}
+      </span>
+    );
+  };
+
+  const getPaymentMethodLabel = (method: string) => {
+    const labels = {
+      cash: 'نقدي',
+      bank_transfer: 'تحويل بنكي',
+      check: 'شيك',
+    };
+    return labels[method as keyof typeof labels] || method;
+  };
+
+  return (
+    <Layout>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">سندات القبض</h2>
+            <p className="text-gray-600 mt-1">إدارة سندات القبض والمقبوضات</p>
+          </div>
+          {hasPermission('vouchers:create') && (
+            <button
+              onClick={() => setShowForm(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              <Plus className="w-4 h-4" />
+              سند قبض جديد
+            </button>
+          )}
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">جميع الحالات</option>
+            <option value="draft">مسودة</option>
+            <option value="approved">موافق عليه</option>
+            <option value="posted">مرحل</option>
+          </select>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          {isLoading ? (
+            <div className="p-8 text-center text-gray-500">جاري التحميل...</div>
+          ) : vouchers && vouchers.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      رقم السند
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      التاريخ
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      الحساب
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      المبلغ
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      طريقة الدفع
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      الحالة
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                      إجراءات
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {vouchers.map((voucher: any) => (
+                    <tr key={voucher.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                        {voucher.voucher_number}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {new Date(voucher.voucher_date).toLocaleDateString('ar-IQ')}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {voucher.account?.name_ar || '-'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {voucher.amount?.toLocaleString('ar-IQ')} IQD
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {getPaymentMethodLabel(voucher.payment_method)}
+                      </td>
+                      <td className="px-6 py-4">{getStatusBadge(voucher.status)}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-2">
+                          {hasPermission('vouchers:approve') && voucher.status === 'draft' && (
+                            <button
+                              onClick={() => handleApprove(voucher.id)}
+                              className="p-1 text-green-600 hover:bg-green-50 rounded"
+                              title="موافقة"
+                            >
+                              <Check className="w-4 h-4" />
+                            </button>
+                          )}
+                          {hasPermission('vouchers:post') && voucher.status === 'approved' && (
+                            <button
+                              onClick={() => handlePost(voucher.id)}
+                              className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                              title="ترحيل"
+                            >
+                              <Send className="w-4 h-4" />
+                            </button>
+                          )}
+                          {hasPermission('vouchers:delete') && voucher.status === 'draft' && (
+                            <button
+                              onClick={() => handleDelete(voucher.id)}
+                              className="p-1 text-red-600 hover:bg-red-50 rounded"
+                              title="حذف"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="p-8 text-center text-gray-500">لا توجد سندات قبض</div>
+          )}
+        </div>
+
+        {showForm && (
+          <ReceiptVoucherForm
+            onClose={() => setShowForm(false)}
+            onSuccess={() => {
+              queryClient.invalidateQueries({ queryKey: ['receipt-vouchers'] });
+              setShowForm(false);
+            }}
+          />
+        )}
+      </div>
+    </Layout>
+  );
+};
+
+const ReceiptVoucherForm = ({
+  onClose,
+  onSuccess,
+}: {
+  onClose: () => void;
+  onSuccess: () => void;
+}) => {
+  const [formData, setFormData] = useState({
+    voucher_date: new Date().toISOString().split('T')[0],
+    account_id: '',
+    amount: 0,
+    payment_method: 'cash',
+    reference_number: '',
+    description: '',
+  });
+
+  const mutation = useMutation({
+    mutationFn: (data: any) => receiptVouchersService.createReceiptVoucher(data),
+    onSuccess,
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    mutation.mutate(formData);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-gray-200">
+          <h3 className="text-xl font-bold text-gray-900">سند قبض جديد</h3>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                تاريخ السند *
+              </label>
+              <input
+                type="date"
+                required
+                value={formData.voucher_date}
+                onChange={(e) => setFormData({ ...formData, voucher_date: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                المبلغ *
+              </label>
+              <input
+                type="number"
+                required
+                min="0"
+                step="0.01"
+                value={formData.amount}
+                onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                طريقة الدفع *
+              </label>
+              <select
+                required
+                value={formData.payment_method}
+                onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="cash">نقدي</option>
+                <option value="bank_transfer">تحويل بنكي</option>
+                <option value="check">شيك</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                رقم المرجع
+              </label>
+              <input
+                type="text"
+                value={formData.reference_number}
+                onChange={(e) => setFormData({ ...formData, reference_number: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              الوصف
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              rows={3}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="flex gap-3 pt-4 border-t">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+            >
+              إلغاء
+            </button>
+            <button
+              type="submit"
+              disabled={mutation.isPending}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+            >
+              {mutation.isPending ? 'جاري الحفظ...' : 'حفظ'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};

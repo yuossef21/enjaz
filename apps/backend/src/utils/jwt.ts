@@ -3,12 +3,14 @@ import { config } from '../config/env.js';
 import { JWTPayload } from '../models/types.js';
 
 export const generateAccessToken = (payload: JWTPayload): string => {
+  // @ts-ignore - expiresIn type issue with jsonwebtoken
   return jwt.sign(payload, config.jwt.secret, {
     expiresIn: config.jwt.expiresIn,
   });
 };
 
 export const generateRefreshToken = (payload: JWTPayload): string => {
+  // @ts-ignore - expiresIn type issue with jsonwebtoken
   return jwt.sign(payload, config.jwt.refreshSecret, {
     expiresIn: config.jwt.refreshExpiresIn,
   });

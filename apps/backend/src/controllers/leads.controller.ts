@@ -127,4 +127,17 @@ export const leadsController = {
       res.status(500).json({ error: error.message });
     }
   },
+
+  async deleteLead(req: AuthRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      await leadsService.deleteLead(id);
+
+      logger.info(`Lead deleted: ${id} by ${req.user!.email}`);
+      res.json({ message: 'Lead deleted successfully' });
+    } catch (error: any) {
+      logger.error('Delete lead error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  },
 };

@@ -98,4 +98,33 @@ export const attendanceController = {
       res.status(500).json({ error: error.message });
     }
   },
+
+  async updateAttendance(req: AuthRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+
+      const attendance = await attendanceService.updateAttendance(id, updates);
+
+      logger.info(`Attendance updated: ${id} by ${req.user!.email}`);
+      res.json(attendance);
+    } catch (error: any) {
+      logger.error('Update attendance error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  async deleteAttendance(req: AuthRequest, res: Response) {
+    try {
+      const { id } = req.params;
+
+      await attendanceService.deleteAttendance(id);
+
+      logger.info(`Attendance deleted: ${id} by ${req.user!.email}`);
+      res.json({ message: 'Attendance deleted successfully' });
+    } catch (error: any) {
+      logger.error('Delete attendance error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  },
 };

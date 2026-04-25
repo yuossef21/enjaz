@@ -50,4 +50,8 @@ export const leadsService = {
     });
     return data;
   },
+
+  async deleteLead(id: string): Promise<void> {
+    await api.delete(`/leads/${id}`);
+  },
 };

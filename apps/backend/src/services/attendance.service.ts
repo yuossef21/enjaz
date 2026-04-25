@@ -156,4 +156,30 @@ export const attendanceService = {
     const buffer = await workbook.xlsx.writeBuffer();
     return buffer;
   },
+
+  async updateAttendance(id: string, updates: Partial<Attendance>) {
+    const { data, error } = await supabase
+      .from('attendance')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  },
+
+  async deleteAttendance(id: string) {
+    const { error } = await supabase
+      .from('attendance')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  },
 };

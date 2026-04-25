@@ -9,14 +9,43 @@ import authRoutes from './routes/auth.routes.js';
 import usersRoutes from './routes/users.routes.js';
 import leadsRoutes from './routes/leads.routes.js';
 import attendanceRoutes from './routes/attendance.routes.js';
+import customersRoutes from './routes/customers.routes.js';
+import invoicesRoutes from './routes/invoices.routes.js';
+import expenseClaimsRoutes from './routes/expense-claims.routes.js';
+import paymentVouchersRoutes from './routes/payment-vouchers.routes.js';
+import receiptVouchersRoutes from './routes/receipt-vouchers.routes.js';
+import employeesRoutes from './routes/employees.routes.js';
+import leaveRequestsRoutes from './routes/leave-requests.routes.js';
+import payrollRoutes from './routes/payroll.routes.js';
+import productsRoutes from './routes/products.routes.js';
+import dashboardRoutes from './routes/dashboard.routes.js';
 
 const app = express();
 
 // Middleware
 app.use(helmet());
-app.use(cors({ origin: config.cors.origin, credentials: true }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+// CORS configuration to support multiple origins
+const allowedOrigins = config.cors.origin.split(',').map(o => o.trim());
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Set UTF-8 encoding for all responses
+app.use((req, res, next) => {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  next();
+});
 
 // Request logging
 app.use((req, res, next) => {
@@ -34,6 +63,16 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/leads', leadsRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/customers', customersRoutes);
+app.use('/api/invoices', invoicesRoutes);
+app.use('/api/expense-claims', expenseClaimsRoutes);
+app.use('/api/payment-vouchers', paymentVouchersRoutes);
+app.use('/api/receipt-vouchers', receiptVouchersRoutes);
+app.use('/api/employees', employeesRoutes);
+app.use('/api/leave-requests', leaveRequestsRoutes);
+app.use('/api/payroll', payrollRoutes);
+app.use('/api/products', productsRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // 404 handler
 app.use((req, res) => {

@@ -44,4 +44,22 @@ export const attendanceService = {
     });
     return data;
   },
+
+  async getTodayAttendance(): Promise<Attendance | null> {
+    const { data } = await api.get<Attendance[]>('/attendance/my-records');
+    const today = new Date().toISOString().split('T')[0];
+    const todayRecord = data.find((record) =>
+      record.check_in.startsWith(today)
+    );
+    return todayRecord || null;
+  },
+
+  async updateAttendance(id: string, updates: Partial<Attendance>): Promise<Attendance> {
+    const { data } = await api.patch<Attendance>(`/attendance/${id}`, updates);
+    return data;
+  },
+
+  async deleteAttendance(id: string): Promise<void> {
+    await api.delete(`/attendance/${id}`);
+  },
 };

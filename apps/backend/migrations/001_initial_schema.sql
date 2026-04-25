@@ -1,6 +1,12 @@
 -- Enjaz Management System Database Schema
 -- Phase 1: CRM, Attendance, User Management
 
+-- Drop existing tables if they exist (in reverse order due to foreign keys)
+DROP TABLE IF EXISTS audit_log CASCADE;
+DROP TABLE IF EXISTS attendance CASCADE;
+DROP TABLE IF EXISTS leads CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
@@ -72,7 +78,7 @@ CREATE INDEX idx_audit_entity ON audit_log(entity_type, entity_id);
 INSERT INTO users (email, password_hash, full_name, role, permissions)
 VALUES (
   'admin@enjaz.com',
-  '$2b$10$rKZLvVZqGJxE5Y5yN5YqXOZJ5YqXOZJ5YqXOZJ5YqXOZJ5YqXOZJ5Y',
+  '$2b$10$FFDbM1EkU8ecdKoaiPJDIOffNPj1CB8ssnDn1/yzCWuqvnDsiUtum',
   'System Administrator',
   'admin',
   '["*"]'::jsonb
@@ -82,7 +88,7 @@ VALUES (
 INSERT INTO users (email, password_hash, full_name, role, permissions)
 VALUES (
   'quality@enjaz.com',
-  '$2b$10$rKZLvVZqGJxE5Y5yN5YqXOZJ5YqXOZJ5YqXOZJ5YqXOZJ5YqXOZJ5Y',
+  '$2b$10$PQOKXIr6y9H9T9K7cQR/oua.sDuRO8OQgjlyIAHVydrWqExLs.4lu',
   'Quality Manager',
   'quality',
   '["leads:approve", "leads:view"]'::jsonb
@@ -92,7 +98,7 @@ VALUES (
 INSERT INTO users (email, password_hash, full_name, role, permissions)
 VALUES (
   'promoter@enjaz.com',
-  '$2b$10$rKZLvVZqGJxE5Y5yN5YqXOZJ5YqXOZJ5YqXOZJ5YqXOZJ5YqXOZJ5Y',
+  '$2b$10$yYnjSLCp1701/E0K/b.RIevMFa31qYLgwSSC9IF7bt0y.1wBRbsgS',
   'Field Promoter',
   'promoter',
   '["leads:create", "leads:view", "attendance:checkin"]'::jsonb

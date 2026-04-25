@@ -29,16 +29,21 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100">
+      <div className="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">نظام إنجاز</h1>
-          <p className="text-gray-600 mt-2">تسجيل الدخول إلى حسابك</p>
+          <div className="inline-block bg-orange-500 text-white p-4 rounded-full mb-4">
+            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">شركة الإنجاز</h1>
+          <p className="text-sm text-gray-500 uppercase tracking-wide">ENJAZ MANAGEMENT</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
+            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center">
               {error}
             </div>
           )}
@@ -53,8 +58,8 @@ export const LoginPage = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="admin@enjaz.com"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+              placeholder="أدخل بريدك الإلكتروني"
             />
           </div>
 
@@ -68,7 +73,7 @@ export const LoginPage = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
               placeholder="••••••••"
             />
           </div>
@@ -76,18 +81,11 @@ export const LoginPage = () => {
           <button
             type="submit"
             disabled={loginMutation.isPending}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full bg-orange-500 text-white py-3 px-4 rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium text-lg shadow-lg hover:shadow-xl"
           >
             {loginMutation.isPending ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
           </button>
         </form>
-
-        <div className="mt-6 text-center text-sm text-gray-600">
-          <p>حسابات تجريبية:</p>
-          <p className="mt-1">Admin: admin@enjaz.com / admin123</p>
-          <p>Quality: quality@enjaz.com / quality123</p>
-          <p>Promoter: promoter@enjaz.com / promoter123</p>
-        </div>
       </div>
     </div>
   );

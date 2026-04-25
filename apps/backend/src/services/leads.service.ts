@@ -21,6 +21,7 @@ export const leadsService = {
       `)
       .order('created_at', { ascending: false });
 
+    // المروجين يشوفون بس طلباتهم
     if (filters.role === 'promoter') {
       query = query.eq('promoter_id', filters.userId);
     }
@@ -190,5 +191,16 @@ export const leadsService = {
 
     const buffer = await workbook.xlsx.writeBuffer();
     return buffer;
+  },
+
+  async deleteLead(id: string) {
+    const { error } = await supabase
+      .from('leads')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      throw new Error(error.message);
+    }
   },
 };

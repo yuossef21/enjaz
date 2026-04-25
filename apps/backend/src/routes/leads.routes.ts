@@ -14,5 +14,6 @@ router.get('/export', leadsController.exportToExcel);
 router.get('/:id', leadsController.getLeadById);
 router.patch('/:id', leadsController.updateLead);
 router.patch('/:id/status', requirePermission('leads:approve'), leadsController.updateStatus);
+router.delete('/:id', requirePermission('leads:delete'), leadsController.deleteLead);
 
 export default router;

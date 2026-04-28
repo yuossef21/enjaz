@@ -6,7 +6,7 @@ import { logger } from '../utils/logger.js';
 export const leadsController = {
   async getLeads(req: AuthRequest, res: Response) {
     try {
-      const { status, search, promoter_id } = req.query;
+      const { status, search, promoter_id, date, month } = req.query;
       const userId = req.user!.userId;
       const role = req.user!.role;
       const userPermissions = req.user!.permissions || [];
@@ -18,6 +18,8 @@ export const leadsController = {
         status: status as string,
         search: search as string,
         promoterId: promoter_id as string,
+        date: date as string,
+        month: month as string,
         userId,
         role,
         canViewAll,

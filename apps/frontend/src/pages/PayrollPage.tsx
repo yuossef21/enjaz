@@ -6,13 +6,14 @@ import { Layout } from '@/components/layout/Layout';
 import { Plus, Check, DollarSign, Trash2, Edit, Download, Printer } from 'lucide-react';
 import { PayrollRecord } from '@/types';
 import { useAuthStore } from '@/store/authStore';
-import { generatePayrollPDF } from '@/utils/payrollPDF';
+import { PayrollInvoicePrint } from '@/components/payroll/PayrollInvoicePrint';
 
 export const PayrollPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingRecord, setEditingRecord] = useState<PayrollRecord | null>(null);
   const [statusFilter, setStatusFilter] = useState('');
   const [yearFilter, setYearFilter] = useState(new Date().getFullYear());
+  const [printingRecord, setPrintingRecord] = useState<any>(null);
   const queryClient = useQueryClient();
   const { hasPermission, user } = useAuthStore();
 
@@ -68,7 +69,7 @@ export const PayrollPage = () => {
   };
 
   const handlePrintInvoice = (record: any) => {
-    generatePayrollPDF({
+    setPrintingRecord({
       employee_name: record.employee?.full_name || '-',
       position: record.employee?.position,
       department: record.employee?.department,
@@ -325,6 +326,13 @@ export const PayrollPage = () => {
               setShowForm(false);
               setEditingRecord(null);
             }}
+          />
+        )}
+
+        {printingRecord && (
+          <PayrollInvoicePrint
+            data={printingRecord}
+            onClose={() => setPrintingRecord(null)}
           />
         )}
       </div>

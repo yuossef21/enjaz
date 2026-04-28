@@ -6,6 +6,8 @@ export const leadsService = {
     status?: string;
     search?: string;
     promoter_id?: string;
+    date?: string;
+    month?: string;
   }): Promise<Lead[]> {
     const { data } = await api.get<Lead[]>('/leads', { params });
     return data;

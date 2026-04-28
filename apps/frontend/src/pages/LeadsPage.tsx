@@ -4,20 +4,29 @@ import { leadsService } from '@/services/leads.service';
 import { usersService } from '@/services/users.service';
 import { Layout } from '@/components/layout/Layout';
 import { useAuthStore } from '@/store/authStore';
-import { Download, Search, Trash2, Plus } from 'lucide-react';
+import { Download, Search, Trash2, Plus, Eye } from 'lucide-react';
 import { Lead } from '@/types';
 
 export const LeadsPage = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [promoterFilter, setPromoterFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
+  const [monthFilter, setMonthFilter] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [viewingLead, setViewingLead] = useState<Lead | null>(null);
   const { hasPermission } = useAuthStore();
   const queryClient = useQueryClient();
 
   const { data: leads, isLoading } = useQuery({
-    queryKey: ['leads', statusFilter, search, promoterFilter],
-    queryFn: () => leadsService.getLeads({ status: statusFilter, search, promoter_id: promoterFilter }),
+    queryKey: ['leads', statusFilter, search, promoterFilter, dateFilter, monthFilter],
+    queryFn: () => leadsService.getLeads({
+      status: statusFilter,
+      search,
+      promoter_id: promoterFilter,
+      date: dateFilter,
+      month: monthFilter,
+    }),
   });
 
   // Get unique promoters for filter (only if user can view all leads)
@@ -125,7 +134,7 @@ export const LeadsPage = () => {
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-          <div className={`grid grid-cols-1 ${canViewAllLeads ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4`}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div className="relative">
               <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
@@ -160,6 +169,20 @@ export const LeadsPage = () => {
                 ))}
               </select>
             )}
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              placeholder="فلتر حسب اليوم"
+            />
+            <input
+              type="month"
+              value={monthFilter}
+              onChange={(e) => setMonthFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              placeholder="فلتر حسب الشهر"
+            />
           </div>
         </div>
 
@@ -214,6 +237,13 @@ export const LeadsPage = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setViewingLead(lead)}
+                            className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                            title="معاينة"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
                           {(hasPermission('leads:approve') || hasPermission('leads:edit')) && lead.status === 'pending' && (
                             <>
                               <button
@@ -261,6 +291,14 @@ export const LeadsPage = () => {
             }}
           />
         )}
+
+        {/* Lead View Modal */}
+        {viewingLead && (
+          <LeadViewModal
+            lead={viewingLead}
+            onClose={() => setViewingLead(null)}
+          />
+        )}
       </div>
     </Layout>
   );
@@ -279,6 +317,7 @@ const LeadForm = ({
     address: '',
     notes: '',
     source: '',
+    activity_type: '',
   });
 
   const mutation = useMutation({
@@ -358,6 +397,20 @@ const LeadForm = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
+              نوع النشاط *
+            </label>
+            <input
+              type="text"
+              required
+              value={formData.activity_type}
+              onChange={(e) => setFormData({ ...formData, activity_type: e.target.value })}
+              placeholder="مثال: مطعم، محل تجاري، صيدلية..."
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               ملاحظات
             </label>
             <textarea
@@ -385,6 +438,136 @@ const LeadForm = ({
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+};
+
+const LeadViewModal = ({ lead, onClose }: { lead: Lead; onClose: () => void }) => {
+  const getSourceLabel = (source: string) => {
+    const labels: Record<string, string> = {
+      'walk-in': 'زيارة مباشرة',
+      'referral': 'إحالة',
+      'cold-call': 'اتصال بارد',
+      'social-media': 'وسائل التواصل',
+      'website': 'الموقع الإلكتروني',
+      'other': 'أخرى',
+    };
+    return labels[source] || source || '-';
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      pending: 'قيد الانتظار',
+      opportunity: 'فرصة',
+      rejected: 'مرفوض',
+    };
+    return labels[status] || status;
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+          <h3 className="text-xl font-bold text-gray-900">تفاصيل الطلب</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">اسم العميل</p>
+              <p className="font-semibold text-gray-900">{lead.customer_name}</p>
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">رقم الهاتف</p>
+              <p className="font-semibold text-gray-900">{lead.phone}</p>
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">العنوان</p>
+              <p className="font-semibold text-gray-900">{lead.address || '-'}</p>
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">نوع النشاط</p>
+              <p className="font-semibold text-gray-900">{(lead as any).activity_type || '-'}</p>
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">المصدر</p>
+              <p className="font-semibold text-gray-900">{getSourceLabel(lead.source || '')}</p>
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">الحالة</p>
+              <p className="font-semibold text-gray-900">{getStatusLabel(lead.status)}</p>
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">المروج</p>
+              <p className="font-semibold text-gray-900">{lead.promoter?.full_name || '-'}</p>
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600 mb-1">تاريخ الإنشاء</p>
+              <p className="font-semibold text-gray-900">
+                {new Date(lead.created_at).toLocaleDateString('ar-IQ', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </p>
+            </div>
+          </div>
+
+          {lead.notes && (
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600 mb-2">ملاحظات</p>
+              <p className="text-gray-900 whitespace-pre-wrap">{lead.notes}</p>
+            </div>
+          )}
+
+          {lead.status === 'rejected' && lead.rejection_reason && (
+            <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+              <p className="text-sm text-red-600 mb-2">سبب الرفض</p>
+              <p className="text-red-900 whitespace-pre-wrap">{lead.rejection_reason}</p>
+            </div>
+          )}
+
+          {lead.reviewed_by && (
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <p className="text-sm text-blue-600 mb-2">تمت المراجعة بواسطة</p>
+              <p className="text-blue-900">{(lead as any).reviewer?.full_name || '-'}</p>
+              {lead.reviewed_at && (
+                <p className="text-sm text-blue-700 mt-1">
+                  {new Date(lead.reviewed_at).toLocaleDateString('ar-IQ', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="p-6 border-t border-gray-200">
+          <button
+            onClick={onClose}
+            className="w-full px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+          >
+            إغلاق
+          </button>
+        </div>
       </div>
     </div>
   );

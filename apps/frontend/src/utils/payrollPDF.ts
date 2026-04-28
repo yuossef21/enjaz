@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 interface PayrollData {
   employee_name: string;
@@ -66,7 +66,7 @@ export const generatePayrollPDF = (data: PayrollData) => {
     ['الخصومات', `${data.deductions.toLocaleString('ar-IQ')} د.ع`],
   ];
 
-  (doc as any).autoTable({
+  autoTable(doc, {
     startY: 90,
     head: [['البيان', 'المبلغ']],
     body: tableData,

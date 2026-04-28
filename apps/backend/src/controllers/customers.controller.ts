@@ -6,7 +6,7 @@ import { logger } from '../utils/logger.js';
 export const customersController = {
   async getCustomers(req: AuthRequest, res: Response) {
     try {
-      const { search, customer_type, is_active } = req.query;
+      const { search, customer_type, is_active, date, month } = req.query;
       const userId = req.user!.userId;
       const userPermissions = req.user!.permissions || [];
 
@@ -18,6 +18,8 @@ export const customersController = {
         customer_type: customer_type as string,
         is_active: is_active === 'true' ? true : is_active === 'false' ? false : undefined,
         created_by: canViewAll ? undefined : userId,
+        date: date as string,
+        month: month as string,
       });
 
       res.json(customers);

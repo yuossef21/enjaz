@@ -13,6 +13,8 @@ export const PayrollPage = () => {
   const [editingRecord, setEditingRecord] = useState<PayrollRecord | null>(null);
   const [statusFilter, setStatusFilter] = useState('');
   const [yearFilter, setYearFilter] = useState(new Date().getFullYear());
+  const [dateFilter, setDateFilter] = useState('');
+  const [monthFilter, setMonthFilter] = useState('');
   const [printingRecord, setPrintingRecord] = useState<any>(null);
   const queryClient = useQueryClient();
   const { hasPermission, user } = useAuthStore();
@@ -22,8 +24,13 @@ export const PayrollPage = () => {
   console.log('PayrollPage - hasPermission function:', hasPermission);
 
   const { data: records, isLoading } = useQuery({
-    queryKey: ['payroll', statusFilter, yearFilter],
-    queryFn: () => payrollService.getPayrollRecords({ status: statusFilter, year: yearFilter }),
+    queryKey: ['payroll', statusFilter, yearFilter, dateFilter, monthFilter],
+    queryFn: () => payrollService.getPayrollRecords({
+      status: statusFilter,
+      year: yearFilter,
+      date: dateFilter,
+      month: monthFilter,
+    }),
   });
 
   const { data: employees } = useQuery({
@@ -53,7 +60,12 @@ export const PayrollPage = () => {
   });
 
   const exportMutation = useMutation({
-    mutationFn: () => payrollService.exportToExcel({ status: statusFilter, year: yearFilter }),
+    mutationFn: () => payrollService.exportToExcel({
+      status: statusFilter,
+      year: yearFilter,
+      date: dateFilter,
+      month: monthFilter,
+    }),
     onSuccess: (blob) => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -165,29 +177,47 @@ export const PayrollPage = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200 flex gap-4">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">جميع الحالات</option>
-            <option value="draft">مسودة</option>
-            <option value="approved">موافق عليه</option>
-            <option value="paid">مدفوع</option>
-          </select>
+        <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">جميع الحالات</option>
+              <option value="draft">مسودة</option>
+              <option value="approved">موافق عليه</option>
+              <option value="paid">مدفوع</option>
+            </select>
 
-          <select
-            value={yearFilter}
-            onChange={(e) => setYearFilter(Number(e.target.value))}
-            className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-          >
-            {[2024, 2025, 2026, 2027].map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
+            <select
+              value={yearFilter}
+              onChange={(e) => setYearFilter(Number(e.target.value))}
+              className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            >
+              {[2024, 2025, 2026, 2027].map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              placeholder="فلتر حسب اليوم"
+            />
+
+            <input
+              type="month"
+              value={monthFilter}
+              onChange={(e) => setMonthFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              placeholder="فلتر حسب الشهر"
+            />
+          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">

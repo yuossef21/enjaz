@@ -6,6 +6,8 @@ export const customersService = {
     search?: string;
     customer_type?: string;
     is_active?: boolean;
+    date?: string;
+    month?: string;
   }): Promise<Customer[]> {
     const { data } = await api.get<Customer[]>('/customers', { params });
     return data;
@@ -39,6 +41,8 @@ export const customersService = {
     search?: string;
     customer_type?: string;
     is_active?: boolean;
+    date?: string;
+    month?: string;
   }): Promise<any[]> {
     const { data } = await api.get('/customers/export', { params });
     return data;

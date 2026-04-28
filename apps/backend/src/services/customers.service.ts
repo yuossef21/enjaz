@@ -7,6 +7,8 @@ export const customersService = {
     customer_type?: string;
     is_active?: boolean;
     created_by?: string;
+    date?: string;
+    month?: string;
   }) {
     let query = supabase
       .from('customers')
@@ -30,6 +32,23 @@ export const customersService = {
 
     if (filters?.created_by) {
       query = query.eq('created_by', filters.created_by);
+    }
+
+    // Filter by specific date
+    if (filters?.date) {
+      const startOfDay = new Date(filters.date);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(filters.date);
+      endOfDay.setHours(23, 59, 59, 999);
+      query = query.gte('created_at', startOfDay.toISOString()).lte('created_at', endOfDay.toISOString());
+    }
+
+    // Filter by month (format: YYYY-MM)
+    if (filters?.month) {
+      const [year, month] = filters.month.split('-');
+      const startOfMonth = new Date(parseInt(year), parseInt(month) - 1, 1);
+      const endOfMonth = new Date(parseInt(year), parseInt(month), 0, 23, 59, 59, 999);
+      query = query.gte('created_at', startOfMonth.toISOString()).lte('created_at', endOfMonth.toISOString());
     }
 
     const { data, error } = await query;

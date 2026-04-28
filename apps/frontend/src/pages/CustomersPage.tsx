@@ -11,11 +11,18 @@ export const CustomersPage = () => {
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
+  const [monthFilter, setMonthFilter] = useState('');
   const queryClient = useQueryClient();
 
   const { data: customers, isLoading } = useQuery({
-    queryKey: ['customers', search, typeFilter],
-    queryFn: () => customersService.getCustomers({ search, customer_type: typeFilter }),
+    queryKey: ['customers', search, typeFilter, dateFilter, monthFilter],
+    queryFn: () => customersService.getCustomers({
+      search,
+      customer_type: typeFilter,
+      date: dateFilter,
+      month: monthFilter,
+    }),
   });
 
   const deleteMutation = useMutation({
@@ -38,7 +45,12 @@ export const CustomersPage = () => {
 
   const handleExport = async () => {
     try {
-      const data = await customersService.exportCustomers({ search, customer_type: typeFilter });
+      const data = await customersService.exportCustomers({
+        search,
+        customer_type: typeFilter,
+        date: dateFilter,
+        month: monthFilter,
+      });
       const ws = XLSX.utils.json_to_sheet(data);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'العملاء');
@@ -80,7 +92,7 @@ export const CustomersPage = () => {
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="relative">
               <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
@@ -100,6 +112,20 @@ export const CustomersPage = () => {
               <option value="individual">فرد</option>
               <option value="company">شركة</option>
             </select>
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              placeholder="فلتر حسب اليوم"
+            />
+            <input
+              type="month"
+              value={monthFilter}
+              onChange={(e) => setMonthFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              placeholder="فلتر حسب الشهر"
+            />
           </div>
         </div>
 

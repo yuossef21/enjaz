@@ -7,6 +7,7 @@ export const payrollService = {
     month?: string;
     year?: number;
     status?: string;
+    date?: string;
   }): Promise<PayrollRecord[]> {
     const { data } = await api.get<PayrollRecord[]>('/payroll', { params });
     return data;
@@ -41,7 +42,7 @@ export const payrollService = {
     await api.delete(`/payroll/${id}`);
   },
 
-  async exportToExcel(params?: { status?: string; year?: number }): Promise<Blob> {
+  async exportToExcel(params?: { status?: string; year?: number; date?: string; month?: string }): Promise<Blob> {
     const { data } = await api.get('/payroll/export', {
       params,
       responseType: 'blob',
